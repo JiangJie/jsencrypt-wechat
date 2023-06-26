@@ -350,6 +350,8 @@ export class ASN1 {
             case 3:
                 return "Private_" + this.tag.tagNumber.toString();
         }
+
+        return "";
     }
 
     public content(maxLength:number) { // a preview of the content (intended for humans)

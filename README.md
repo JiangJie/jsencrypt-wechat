@@ -1,3 +1,5 @@
+> 该Fork版本仅删减了不支持微信小程序和小游戏环境的代码，力求保持功能完整性和正确性。
+
 Website
 ======================
 http://travistidwell.com/jsencrypt
@@ -189,4 +191,3 @@ exponent1 => dmp1
 exponent2 => dmq1
 coefficient => coeff
 ```
-

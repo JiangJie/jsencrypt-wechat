@@ -1,8 +1,6 @@
 import { b64tohex, hex2b64 } from "./lib/jsbn/base64";
 import { JSEncryptRSAKey } from "./JSEncryptRSAKey";
-const version = typeof process !== 'undefined'
-    ? process.env?.npm_package_version
-    : undefined;
+const version = "";
 
 export interface IJSEncryptOptions {
     default_key_size?: string;
@@ -166,55 +164,11 @@ export class JSEncrypt {
                     this.default_public_exponent,
                     cb,
                 );
-                return;
+                return this.key;
             }
             // Generate the key.
             this.key.generate(this.default_key_size, this.default_public_exponent);
         }
         return this.key;
-    }
-
-    /**
-     * Returns the pem encoded representation of the private key
-     * If the key doesn't exists a new key will be created
-     * @returns {string} pem encoded representation of the private key WITH header and footer
-     * @public
-     */
-    public getPrivateKey() {
-        // Return the private representation of this key.
-        return this.getKey().getPrivateKey();
-    }
-
-    /**
-     * Returns the pem encoded representation of the private key
-     * If the key doesn't exists a new key will be created
-     * @returns {string} pem encoded representation of the private key WITHOUT header and footer
-     * @public
-     */
-    public getPrivateKeyB64() {
-        // Return the private representation of this key.
-        return this.getKey().getPrivateBaseKeyB64();
-    }
-
-    /**
-     * Returns the pem encoded representation of the public key
-     * If the key doesn't exists a new key will be created
-     * @returns {string} pem encoded representation of the public key WITH header and footer
-     * @public
-     */
-    public getPublicKey() {
-        // Return the private representation of this key.
-        return this.getKey().getPublicKey();
-    }
-
-    /**
-     * Returns the pem encoded representation of the public key
-     * If the key doesn't exists a new key will be created
-     * @returns {string} pem encoded representation of the public key WITHOUT header and footer
-     * @public
-     */
-    public getPublicKeyB64() {
-        // Return the private representation of this key.
-        return this.getKey().getPublicBaseKeyB64();
     }
 }

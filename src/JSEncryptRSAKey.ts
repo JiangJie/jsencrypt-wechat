@@ -1,10 +1,8 @@
-import { hex2b64 } from "./lib/jsbn/base64";
 import { Hex } from "./lib/asn1js/hex";
 import { Base64 } from "./lib/asn1js/base64";
 import { ASN1 } from "./lib/asn1js/asn1";
 import { RSAKey } from "./lib/jsbn/rsa";
 import { parseBigInt } from "./lib/jsbn/jsbn";
-import { KJUR } from "./lib/jsrsasign/asn1-1.0";
 
 /**
  * Create a new JSEncryptRSAKey that extends Tom Wu's RSA key object.
@@ -124,105 +122,6 @@ export class JSEncryptRSAKey extends RSAKey {
     }
 
     /**
-     * Translate rsa parameters in a hex encoded string representing the rsa key.
-     *
-     * The translation follow the ASN.1 notation :
-     * RSAPrivateKey ::= SEQUENCE {
-     *   version           Version,
-     *   modulus           INTEGER,  -- n
-     *   publicExponent    INTEGER,  -- e
-     *   privateExponent   INTEGER,  -- d
-     *   prime1            INTEGER,  -- p
-     *   prime2            INTEGER,  -- q
-     *   exponent1         INTEGER,  -- d mod (p1)
-     *   exponent2         INTEGER,  -- d mod (q-1)
-     *   coefficient       INTEGER,  -- (inverse of q) mod p
-     * }
-     * @returns {string}  DER Encoded String representing the rsa private key
-     * @private
-     */
-    public getPrivateBaseKey() {
-        const options = {
-            array: [
-                new KJUR.asn1.DERInteger({ int: 0 }),
-                new KJUR.asn1.DERInteger({ bigint: this.n }),
-                new KJUR.asn1.DERInteger({ int: this.e }),
-                new KJUR.asn1.DERInteger({ bigint: this.d }),
-                new KJUR.asn1.DERInteger({ bigint: this.p }),
-                new KJUR.asn1.DERInteger({ bigint: this.q }),
-                new KJUR.asn1.DERInteger({ bigint: this.dmp1 }),
-                new KJUR.asn1.DERInteger({ bigint: this.dmq1 }),
-                new KJUR.asn1.DERInteger({ bigint: this.coeff }),
-            ],
-        };
-        const seq = new KJUR.asn1.DERSequence(options);
-        return seq.getEncodedHex();
-    }
-
-    /**
-     * base64 (pem) encoded version of the DER encoded representation
-     * @returns {string} pem encoded representation without header and footer
-     * @public
-     */
-    public getPrivateBaseKeyB64() {
-        return hex2b64(this.getPrivateBaseKey());
-    }
-
-    /**
-     * Translate rsa parameters in a hex encoded string representing the rsa public key.
-     * The representation follow the ASN.1 notation :
-     * PublicKeyInfo ::= SEQUENCE {
-     *   algorithm       AlgorithmIdentifier,
-     *   PublicKey       BIT STRING
-     * }
-     * Where AlgorithmIdentifier is:
-     * AlgorithmIdentifier ::= SEQUENCE {
-     *   algorithm       OBJECT IDENTIFIER,     the OID of the enc algorithm
-     *   parameters      ANY DEFINED BY algorithm OPTIONAL (NULL for PKCS #1)
-     * }
-     * and PublicKey is a SEQUENCE encapsulated in a BIT STRING
-     * RSAPublicKey ::= SEQUENCE {
-     *   modulus           INTEGER,  -- n
-     *   publicExponent    INTEGER   -- e
-     * }
-     * @returns {string} DER Encoded String representing the rsa public key
-     * @private
-     */
-    public getPublicBaseKey() {
-        const first_sequence = new KJUR.asn1.DERSequence({
-            array: [
-                new KJUR.asn1.DERObjectIdentifier({ oid: "1.2.840.113549.1.1.1" }), // RSA Encryption pkcs #1 oid
-                new KJUR.asn1.DERNull(),
-            ],
-        });
-
-        const second_sequence = new KJUR.asn1.DERSequence({
-            array: [
-                new KJUR.asn1.DERInteger({ bigint: this.n }),
-                new KJUR.asn1.DERInteger({ int: this.e }),
-            ],
-        });
-
-        const bit_string = new KJUR.asn1.DERBitString({
-            hex: "00" + second_sequence.getEncodedHex(),
-        });
-
-        const seq = new KJUR.asn1.DERSequence({
-            array: [first_sequence, bit_string],
-        });
-        return seq.getEncodedHex();
-    }
-
-    /**
-     * base64 (pem) encoded version of the DER encoded representation
-     * @returns {string} pem encoded representation without header and footer
-     * @public
-     */
-    public getPublicBaseKeyB64() {
-        return hex2b64(this.getPublicBaseKey());
-    }
-
-    /**
      * wrap the string in block of width chars. The default value for rsa keys is 64
      * characters.
      * @param {string} str the pem encoded string without header and footer
@@ -237,30 +136,6 @@ export class JSEncryptRSAKey extends RSAKey {
         }
         const regex = "(.{1," + width + "})( +|$\n?)|(.{1," + width + "})";
         return str.match(RegExp(regex, "g")).join("\n");
-    }
-
-    /**
-     * Retrieve the pem encoded private key
-     * @returns {string} the pem encoded private key with header/footer
-     * @public
-     */
-    public getPrivateKey() {
-        let key = "-----BEGIN RSA PRIVATE KEY-----\n";
-        key += JSEncryptRSAKey.wordwrap(this.getPrivateBaseKeyB64()) + "\n";
-        key += "-----END RSA PRIVATE KEY-----";
-        return key;
-    }
-
-    /**
-     * Retrieve the pem encoded public key
-     * @returns {string} the pem encoded public key with header/footer
-     * @public
-     */
-    public getPublicKey() {
-        let key = "-----BEGIN PUBLIC KEY-----\n";
-        key += JSEncryptRSAKey.wordwrap(this.getPublicBaseKeyB64()) + "\n";
-        key += "-----END PUBLIC KEY-----";
-        return key;
     }
 
     /**
